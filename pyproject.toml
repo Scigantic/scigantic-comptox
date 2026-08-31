@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scigantic-comptox"
+version = "0.1.0"
+description = "Query EPA's CompTox Chemicals Dashboard: ToxCast bioactivity (winning dose-response model + hit-call per chemical/assay-endpoint) from a public S3 mirror, plus live Chemical/Hazard/Exposure lookups via EPA's CCTE API."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT-0" }
+authors = [{ name = "Scigantic", email = "support@scigantic.com" }]
+keywords = ["epa", "comptox", "toxcast", "toxicology", "cheminformatics", "bioinformatics", "duckdb"]
+classifiers = [
+  "License :: OSI Approved :: MIT No Attribution License (MIT-0)",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+dependencies = [
+  "duckdb>=0.10,<2",
+  "pandas>=1.5,<4",
+  "requests>=2.28,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-cov>=5", "mypy>=1.10", "pandas-stubs", "types-requests"]
+
+[project.urls]
+Homepage = "https://scigantic.com"
+Repository = "https://github.com/Scigantic/scigantic-comptox"
+Issues = "https://github.com/Scigantic/scigantic-comptox/issues"
+CompTox = "https://comptox.epa.gov/dashboard/"
+
+[project.scripts]
+scigantic-comptox = "scigantic_comptox.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scigantic_comptox = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["scigantic_comptox"]
+# Not wired into CI as a gate: the mirror-half suite runs real queries
+# against the live S3 mirror, so a coverage threshold would be one more
+# thing that can fail for reasons unrelated to a change.
+
+[tool.mypy]
+strict = true
