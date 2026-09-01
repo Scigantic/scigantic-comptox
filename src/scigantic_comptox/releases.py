@@ -5,12 +5,18 @@ mechanism scigantic-chembl and scigantic-bindingdb use. The v4_3 release
 carries `bioactivity`, `pubchem_bridge`, and four small reference tables
 (`assay_annotations`, `assay_target_mappings`, `cytotox`, `analytical_qc`)
 mirrored alongside EPA's fact table rather than just the fact table alone
--- see reference.py's module docstring for why. `structures` is False
-because DSSTox bulk chemical structures aren't mirrored yet (EPA's bulk
-distribution for that turned out to be a messy institutional drive, not a
-clean single file) -- a future release can add a structures.parquet
-without breaking anything that calls releases() to check what's available
-first.
+-- see reference.py's module docstring for why.
+
+`structures` is True as of this release, but NOT sourced from EPA's own
+DSSTox bulk distribution -- that turned out to be a messy institutional
+drive with no clean single file to mirror, and EPA's live Chemical API has
+an unresolved data-use question for bulk redistribution that wasn't worth
+blocking on. Instead, every chemical this mirror already covers was
+resolved against PubChem's own open, keyless compound search by DTXSID.
+`structures_source` and `structures_coverage` record this plainly rather
+than silently implying full DSSTox coverage: 94.3% of chemicals resolved
+(9,238 of 9,801), the rest genuinely have no PubChem match under that
+name.
 
 The manifest is fetched once per process and cached. If it can't be fetched,
 calls fall back to the snapshot below rather than failing outright.
@@ -34,7 +40,9 @@ _TIMEOUT_SECONDS = 5
 _FALLBACK_LATEST = "v4_3"
 _FALLBACK_RELEASES = {
     "v4_3": {
-        "structures": False,
+        "structures": True,
+        "structures_source": "pubchem",
+        "structures_coverage": 0.943,
         "bioactivity": True,
         "pubchem_bridge": True,
         "assay_annotations": True,
@@ -63,6 +71,11 @@ class ReleaseInfo:
     assay_target_mappings: bool
     cytotox: bool
     analytical_qc: bool
+    # None for a release published before structures existed, or for a
+    # manifest fetched from a package version older than this one's
+    # ReleaseInfo shape -- both real cases, not defensive padding.
+    structures_source: str | None = None
+    structures_coverage: float | None = None
 
 
 _cache: dict[str, Any] | None = None

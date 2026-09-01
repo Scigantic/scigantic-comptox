@@ -17,11 +17,20 @@ def _cmd_info(_args: argparse.Namespace) -> int:
             for name, present in (
                 ("bioactivity", info.bioactivity),
                 ("pubchem_bridge", info.pubchem_bridge),
+                ("assay_annotations", info.assay_annotations),
+                ("assay_target_mappings", info.assay_target_mappings),
+                ("cytotox", info.cytotox),
+                ("analytical_qc", info.analytical_qc),
                 ("structures", info.structures),
             )
             if present
         ]
         suffix = f" + {', '.join(derived)}" if derived else " (nothing mirrored yet)"
+        if info.structures and info.structures_source:
+            suffix += (
+                f" (structures via {info.structures_source}, "
+                f"{info.structures_coverage:.1%} coverage)"
+            )
         print(f"{info.release}{suffix}")
     return 0
 

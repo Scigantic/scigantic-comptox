@@ -24,10 +24,9 @@ instance of it.
   chemical's cytotoxic concentration is a well-known ToxCast confound --
   this is what lets a caller check for it.
 - `analytical_qc()`: per-chemical/per-sample QC pass/caution flags, plus a
-  few OPERA-predicted physicochemical properties (molecular weight, vapor
-  pressure, logKow) that happen to ride along in this file -- not a
-  substitute for the still-unmirrored DSSTox structures, but real signal
-  where it's available.
+  few OPERA-*predicted* physicochemical properties (molecular weight, vapor
+  pressure, logKow) that happen to ride along in this file -- predictions,
+  not the measured structure data `structures()` provides separately.
 """
 
 from __future__ import annotations
