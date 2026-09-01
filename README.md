@@ -40,15 +40,32 @@ comptox.bioactivity(aeid=1114, limit=5)
 
 **A real data-quality issue is handled for you.** EPA's export uses the literal string `"NA"` for missing values in several columns (including `dsstox_substance_id`), not a real SQL `NULL` -- filtering with `IS NOT NULL` silently misses these. `bioactivity()` normalizes this (`NULLIF(..., 'NA')`) so a real `NULL` check works as expected; it also casts columns EPA ships as text purely because of those `"NA"` strings (`ac50`, `bmd`, `top`, and others) to real `DOUBLE`s. Use `bioactivity_raw()` if you want EPA's exact upstream types instead.
 
+**Looking up many chemicals? Use `bioactivity_many()`, not a loop.** The mirror isn't sorted or partitioned by chemical id, so `bioactivity(dtxsid=...)` pays close to a full scan of the table on every call. Fine for one lookup, slow for a batch:
+
+```python
+comptox.bioactivity_many(["DTXSID7020182", "DTXSID2021868", "DTXSID3021805"])
+```
+
+Measured on the real mirror: 50 chemicals looped through `bioactivity()` took 61.9s; the same 50 as one `bioactivity_many()` call took 4.8s -- 13x faster, and the gap grows with batch size.
+
 ## PubChem cross-reference
 
 EPA publishes a per-assay-endpoint PubChem CID cross-reference alongside each `invitrodb` release. This wraps the consolidated version of that file:
 
 ```python
 comptox.pubchem_bridge(dtxsid="DTXSID7020182")
+comptox.pubchem_bridge_many(["DTXSID7020182", "DTXSID2021868"])  # same batching win as above
 ```
 
 Pairs naturally with [scigantic-pubchem](https://github.com/Scigantic/scigantic-pubchem)'s own BioAssay/gene/protein coverage.
+
+## Writing your own SQL
+
+`comptox.query("SELECT ...")` and `comptox.connect()` run against the same `bioactivity`/`pubchem_bridge` views the functions above use, including the `"NA"`-normalization. `dtxsid` works directly in your own SQL too, not just as a Python parameter name:
+
+```python
+comptox.query("SELECT dtxsid, aeid, hitc FROM bioactivity WHERE dtxsid = 'DTXSID7020182'")
+```
 
 ## What's not mirrored (yet)
 

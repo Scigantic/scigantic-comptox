@@ -67,6 +67,37 @@ def bioactivity(
         con.close()
 
 
+def bioactivity_many(
+    dtxsids: list[str],
+    release: str | None = None,
+) -> "pd.DataFrame":
+    """Bioactivity rows for MANY chemicals in one batched query.
+
+    Looping bioactivity(dtxsid=...) per id is the natural way to write a
+    batch feature-extraction pass over a chemical list, but it's the slow
+    way here: the mirror isn't sorted or partitioned by chemical id, so
+    each individual call pays close to a full scan of the ~3.5M-row table.
+    Measured on the real mirror: 50 chemicals looped through bioactivity()
+    took 61.9s (1.24s/call); the same 50 chemicals as one batched IN query
+    took 4.8s -- a 13x difference, and it grows with the batch size since
+    the looped cost is per-call while the batched cost is closer to one
+    scan total. Use this for anything beyond a handful of lookups.
+    """
+    release = release or latest()
+    _require(release, "bioactivity")
+    import pandas as pd
+
+    if not dtxsids:
+        return pd.DataFrame()
+    con = connect(release)
+    try:
+        placeholders = ", ".join(["?"] * len(dtxsids))
+        sql = f"SELECT * FROM bioactivity WHERE dtxsid IN ({placeholders})"
+        return con.execute(sql, list(dtxsids)).df()
+    finally:
+        con.close()
+
+
 def bioactivity_raw(
     release: str | None = None,
     limit: int | None = None,

@@ -23,6 +23,14 @@ source file rather than leaving them for every caller to rediscover:
   NULL rather than raising, since a handful of non-numeric outliers in a
   ~3.5M-row export are expected, not a reason to fail every query.
 
+The view also adds a `dtxsid` column, a plain alias for the normalized
+`dsstox_substance_id` (EPA's raw column name). `bioactivity()`'s `dtxsid=`
+parameter always worked against `dsstox_substance_id` directly, but anyone
+writing their own SQL through `query()`/`connect()` had no way to know that
+without reading this module -- `pubchem_bridge`'s own source column is
+already natively named `dtxsid`, so this makes the two views consistent
+instead of only the Python function signatures agreeing.
+
 `bioactivity_raw` (in bioactivity.py) reads the file directly with no
 normalization, for anyone who wants the exact upstream types.
 """
@@ -95,6 +103,7 @@ def _bioactivity_select_list() -> str:
     # already-numeric columns, plus the odd "flag.length" name) passes
     # through unchanged via EXCLUDE.
     already_handled = ", ".join(_NA_STRING_COLUMNS + _NUMERIC_TEXT_COLUMNS)
+    parts.append("NULLIF(dsstox_substance_id, 'NA') AS dtxsid")
     return f"* EXCLUDE ({already_handled}), " + ", ".join(parts)
 
 
