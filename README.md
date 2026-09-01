@@ -32,15 +32,17 @@ $ pip install scigantic-comptox
 
 ## What's in the bioactivity mirror
 
-Every row is the **winning dose-response model plus hit-call** for one (chemical, ToxCast assay endpoint) pair, from EPA's `invitrodb` v4.3 `mc5-6_winning_model_fits` summary tier: AC50, potency, top, confidence bounds, and `hitc`/`hitcall` (active/inactive/ambiguous). This is the same level of detail as PubChem's own `concise` BioAssay tables, deliberately not the raw well-level plate reads or the full set of *losing* candidate curve models EPA also publishes (`mc4_all_model_fits`) -- that table is what makes EPA's own "summary" download 7GB instead of the ~600MB actually mirrored here; almost nobody needs the losing models, they need the winner.
+Every row is the winning dose-response model plus hit-call for one (chemical, ToxCast assay endpoint) pair, from EPA's `invitrodb` v4.3 `mc5-6_winning_model_fits` summary tier: AC50, potency, top, confidence bounds, and `hitc`/`hitcall` (active/inactive/ambiguous). This is the same level of detail as PubChem's own `concise` BioAssay tables, deliberately not the raw well-level plate reads or the full set of *losing* candidate curve models EPA also publishes (`mc4_all_model_fits`) -- that table is what makes EPA's own "summary" download 7GB instead of the ~600MB actually mirrored here; almost nobody needs the losing models, they need the winner.
 
 ```python
 comptox.bioactivity(aeid=1114, limit=5)
 ```
 
-**A real data-quality issue is handled for you.** EPA's export uses the literal string `"NA"` for missing values in several columns (including `dsstox_substance_id`), not a real SQL `NULL` -- filtering with `IS NOT NULL` silently misses these. `bioactivity()` normalizes this (`NULLIF(..., 'NA')`) so a real `NULL` check works as expected; it also casts columns EPA ships as text purely because of those `"NA"` strings (`ac50`, `bmd`, `top`, and others) to real `DOUBLE`s. Use `bioactivity_raw()` if you want EPA's exact upstream types instead.
+EPA's export uses the literal string `"NA"` for missing values in several columns (including `dsstox_substance_id`), not a real SQL `NULL` -- filtering with `IS NOT NULL` silently misses these. `bioactivity()` normalizes this (`NULLIF(..., 'NA')`) so a real `NULL` check works as expected; it also casts columns EPA ships as text purely because of those `"NA"` strings (`ac50`, `bmd`, `top`, and others) to real `DOUBLE`s. Use `bioactivity_raw()` if you want EPA's exact upstream types instead.
 
-**Looking up many chemicals? Use `bioactivity_many()`, not a loop.** The mirror isn't sorted or partitioned by chemical id, so `bioactivity(dtxsid=...)` pays close to a full scan of the table on every call. Fine for one lookup, slow for a batch:
+### Batch lookups
+
+The mirror isn't sorted or partitioned by chemical id, so `bioactivity(dtxsid=...)` pays close to a full scan of the table on every call. Fine for one lookup, slow for a batch -- use `bioactivity_many()` instead:
 
 ```python
 comptox.bioactivity_many(["DTXSID7020182", "DTXSID2021868", "DTXSID3021805"])
