@@ -18,6 +18,7 @@ from .ctx_client import (
     hazard_toxval,
 )
 from .pubchem_bridge import pubchem_bridge, pubchem_bridge_many
+from .reference import analytical_qc, assay_annotations, assay_target_mappings, cytotox
 from .releases import (
     ReleaseCapabilityError,
     ReleaseInfo,
@@ -41,6 +42,10 @@ __all__ = [
     "bioactivity_raw",
     "pubchem_bridge",
     "pubchem_bridge_many",
+    "assay_annotations",
+    "assay_target_mappings",
+    "cytotox",
+    "analytical_qc",
     "releases",
     "latest",
     "enable_cache",

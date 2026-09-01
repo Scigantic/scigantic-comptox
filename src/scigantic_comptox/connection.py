@@ -31,6 +31,17 @@ without reading this module -- `pubchem_bridge`'s own source column is
 already natively named `dtxsid`, so this makes the two views consistent
 instead of only the Python function signatures agreeing.
 
+`p_ac50`/`p_bmd` are computed log-potency columns, the same shape as
+scigantic-chembl's `pchembl_value` / scigantic-bindingdb's `p_affinity`:
+`6 - log10(value_in_uM)`, i.e. -log10(molar concentration), higher meaning
+more potent. Computed ONLY where `conc_unit = 'uM'` -- verified against the
+real mirror: 98.8% of rows (3,485,260 / 3,527,285) carry `uM`, but 0.09%
+(3,342 rows) carry `mg/l` instead (a mass-based unit that would need each
+compound's molecular weight to convert correctly, not available in this
+table) and about 1% are `NA`/`CF`. Applying the uM-based transform to those
+rows would silently produce a wrong potency value for a real chemical, not
+just a missing one -- NULL is correct for anything not verified as `uM`.
+
 `bioactivity_raw` (in bioactivity.py) reads the file directly with no
 normalization, for anyone who wants the exact upstream types.
 """
@@ -104,6 +115,17 @@ def _bioactivity_select_list() -> str:
     # through unchanged via EXCLUDE.
     already_handled = ", ".join(_NA_STRING_COLUMNS + _NUMERIC_TEXT_COLUMNS)
     parts.append("NULLIF(dsstox_substance_id, 'NA') AS dtxsid")
+    # See module docstring: only a verified `uM` conc_unit gets a potency
+    # transform, everything else (mg/l, NA, CF) stays NULL rather than
+    # guessing the unit.
+    parts.append(
+        "CASE WHEN conc_unit = 'uM' AND TRY_CAST(NULLIF(ac50, 'NA') AS DOUBLE) > 0 "
+        "THEN 6 - LOG10(TRY_CAST(NULLIF(ac50, 'NA') AS DOUBLE)) ELSE NULL END AS p_ac50"
+    )
+    parts.append(
+        "CASE WHEN conc_unit = 'uM' AND TRY_CAST(NULLIF(bmd, 'NA') AS DOUBLE) > 0 "
+        "THEN 6 - LOG10(TRY_CAST(NULLIF(bmd, 'NA') AS DOUBLE)) ELSE NULL END AS p_bmd"
+    )
     return f"* EXCLUDE ({already_handled}), " + ", ".join(parts)
 
 
@@ -148,6 +170,17 @@ def _get_base_connection(release: str) -> "duckdb.DuckDBPyConnection":
                 f"CREATE OR REPLACE VIEW pubchem_bridge AS "
                 f"SELECT * FROM read_parquet('{pubchem_bridge_path}')"
             )
+            for view_name, filename in (
+                ("assay_annotations", "assay_annotations.parquet"),
+                ("assay_target_mappings", "assay_target_mappings.parquet"),
+                ("cytotox", "cytotox.parquet"),
+                ("analytical_qc", "analytical_qc.parquet"),
+            ):
+                path = f"{base}/reference/{filename}"
+                new_con.execute(
+                    f"CREATE OR REPLACE VIEW {view_name} AS "
+                    f"SELECT * FROM read_parquet('{path}')"
+                )
             _base_cons[release] = new_con
             con = new_con
     return con
