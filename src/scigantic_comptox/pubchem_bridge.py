@@ -52,3 +52,29 @@ def pubchem_bridge(
         return con.execute(sql, params).df()
     finally:
         con.close()
+
+
+def pubchem_bridge_many(
+    dtxsids: list[str],
+    release: str | None = None,
+) -> "pd.DataFrame":
+    """pubchem_bridge() rows for MANY chemicals in one batched query.
+
+    Same reasoning as bioactivity_many(): the mirror isn't sorted or
+    partitioned by chemical id, so looping pubchem_bridge(dtxsid=...) per id
+    pays a near-full-scan cost per call. Use this for anything beyond a
+    handful of lookups.
+    """
+    release = release or latest()
+    _require(release, "pubchem_bridge")
+    import pandas as pd
+
+    if not dtxsids:
+        return pd.DataFrame()
+    con = connect(release)
+    try:
+        placeholders = ", ".join(["?"] * len(dtxsids))
+        sql = f"SELECT * FROM pubchem_bridge WHERE dtxsid IN ({placeholders})"
+        return con.execute(sql, list(dtxsids)).df()
+    finally:
+        con.close()

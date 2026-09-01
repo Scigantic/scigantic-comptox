@@ -4,7 +4,7 @@ via EPA's CCTE API (bring your own key)."""
 
 from importlib.metadata import PackageNotFoundError, version as _version
 
-from .bioactivity import bioactivity, bioactivity_raw
+from .bioactivity import bioactivity, bioactivity_many, bioactivity_raw
 from .cache import cache_dir, disable_cache, enable_cache, is_cache_enabled
 from .cache import resolve as cache_resolve
 from .connection import connect, query
@@ -17,7 +17,7 @@ from .ctx_client import (
     exposure_httk,
     hazard_toxval,
 )
-from .pubchem_bridge import pubchem_bridge
+from .pubchem_bridge import pubchem_bridge, pubchem_bridge_many
 from .releases import (
     ReleaseCapabilityError,
     ReleaseInfo,
@@ -37,8 +37,10 @@ __all__ = [
     "connect",
     "query",
     "bioactivity",
+    "bioactivity_many",
     "bioactivity_raw",
     "pubchem_bridge",
+    "pubchem_bridge_many",
     "releases",
     "latest",
     "enable_cache",
