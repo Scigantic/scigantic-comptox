@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.3.0
+
+Closes the `structures: false` gap. Real chemical structures for every
+chemical this mirror already covers -- 9,238 of 9,801 distinct chemicals
+across `bioactivity`/`pubchem_bridge` (94.3%), each resolved live against
+PubChem's own compound search by DTXSID (which indexes DTXSID as a
+synonym), not sourced from EPA's own DSSTox bulk distribution.
+
+- `structures()`/`structures_many()`: cid, title, smiles, inchi,
+  inchi_key, iupac_name, molecular_formula, molecular_weight. Batch
+  support shipped from the start this time, rather than added as a
+  follow-up release the way `bioactivity_many()` had to be.
+- Why PubChem instead of DSSTox or EPA's live Chemical API: DSSTox's bulk
+  distribution turned out to be a large, unstructured institutional drive
+  with no clean single file to mirror -- a real dead end, not skipped for
+  convenience. EPA's live Chemical API could resolve structures too, but
+  has an unresolved data-use question for bulk redistribution (no public
+  Terms of Service or Data Use Agreement found for the API itself, only a
+  general "the data is open" statement on an unrelated downloads page) --
+  not something to guess at rather than ask EPA directly. PubChem is
+  fully open, keyless, and already integrated into this family.
+  `comptox.releases()` reports `structures_source="pubchem"` and the real
+  `structures_coverage` fraction rather than implying this is EPA's own
+  canonical DSSTox data.
+- **Doc correction**: `pubchem_bridge()`'s module docstring previously
+  described it as "a per-assay-endpoint PubChem CID cross-reference" --
+  wrong. It has no `cid` column; `tx_sample_id` is EPA's own ToxCast
+  sample id used when submitting bioactivity data *to* PubChem's BioAssay
+  system, not something a caller can resolve back into a CID. Corrected
+  in the module docstring. `structures()` is the real chemical-to-CID
+  cross-reference this package now has.
+
 ## 0.2.0
 
 Real feedback from a separate ML pipeline evaluating CompTox as a

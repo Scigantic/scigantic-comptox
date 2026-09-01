@@ -26,6 +26,7 @@ from .releases import (
     latest,
     releases,
 )
+from .structures import structures, structures_many
 
 try:
     __version__ = _version("scigantic-comptox")
@@ -46,6 +47,8 @@ __all__ = [
     "assay_target_mappings",
     "cytotox",
     "analytical_qc",
+    "structures",
+    "structures_many",
     "releases",
     "latest",
     "enable_cache",

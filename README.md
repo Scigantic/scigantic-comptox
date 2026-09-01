@@ -52,16 +52,16 @@ comptox.bioactivity_many(["DTXSID7020182", "DTXSID2021868", "DTXSID3021805"])
 
 Measured on the real mirror: 50 chemicals looped through `bioactivity()` took 61.9s; the same 50 as one `bioactivity_many()` call took 4.8s -- 13x faster, and the gap grows with batch size.
 
-## PubChem cross-reference
+## PubChem's own ToxCast submission data
 
-EPA publishes a per-assay-endpoint PubChem CID cross-reference alongside each `invitrodb` release. This wraps the consolidated version of that file:
+EPA publishes its per-assay-endpoint bioactivity data pre-formatted for submission to PubChem's BioAssay system, alongside each `invitrodb` release. This wraps the consolidated version of that file:
 
 ```python
 comptox.pubchem_bridge(dtxsid="DTXSID7020182")
 comptox.pubchem_bridge_many(["DTXSID7020182", "DTXSID2021868"])  # same batching win as above
 ```
 
-Pairs naturally with [scigantic-pubchem](https://github.com/Scigantic/scigantic-pubchem)'s own BioAssay/gene/protein coverage.
+Despite the name, this table has no PubChem CID in it -- `tx_sample_id` is EPA's own ToxCast sample id, not something you can resolve back into a CID. For an actual chemical-to-PubChem cross-reference, see [Chemical structures](#chemical-structures) below.
 
 ## Reference tables
 
@@ -82,9 +82,18 @@ comptox.analytical_qc(dtxsid="DTXSID7020182")               # sample QC pass/cau
 comptox.query("SELECT dtxsid, aeid, hitc FROM bioactivity WHERE dtxsid = 'DTXSID7020182'")
 ```
 
-## What's not mirrored (yet)
+## Chemical structures
 
-DSSTox bulk chemical structures aren't mirrored -- EPA's bulk distribution for that turned out to be a large, unstructured institutional drive rather than a clean single file. `comptox.releases()` reports this plainly (`structures: False`) rather than silently missing the data. For now, chemical structure lookup by DTXSID goes through the live REST half below, the same place EPA's own client gets it from.
+Real structure data for every chemical this mirror covers -- SMILES, InChI, InChIKey, formula, molecular weight -- sourced from PubChem, not EPA's own DSSTox bulk distribution:
+
+```python
+comptox.structures(dtxsid="DTXSID7020182")
+comptox.structures_many(["DTXSID7020182", "DTXSID2021868"])
+```
+
+DSSTox's bulk distribution turned out to be a large, unstructured institutional drive with no clean single file to mirror -- a real dead end, not skipped for convenience. EPA's live Chemical API could resolve structures too, but has an unresolved data-use question for bulk redistribution (no public Terms of Service or Data Use Agreement could be found for the API itself), not something worth guessing at instead of asking EPA directly. PubChem sidesteps both problems: fully open, no key, and every DTXSID here was resolved live against PubChem's own compound search, which indexes DTXSID as a synonym.
+
+Real coverage, not assumed: **9,238 of 9,801 distinct chemicals resolved (94.3%)**. The rest genuinely have no PubChem match under that identifier. `comptox.releases()` reports `structures_source="pubchem"` and the real `structures_coverage` fraction, so this doesn't get mistaken for EPA's own canonical DSSTox data.
 
 ## The live REST half: bring your own EPA API key
 
@@ -127,7 +136,7 @@ comptox.releases()
 
 | release | bioactivity | pubchem bridge | reference tables | structures |
 |---|---|---|---|---|
-| v4_3 | yes | yes | yes | no |
+| v4_3 | yes | yes | yes | yes (PubChem-sourced, 94.3% coverage) |
 
 This table isn't hardcoded. `releases()` reads a small manifest published alongside each mirror run.
 
@@ -145,3 +154,5 @@ MIT-0. See [LICENSE](LICENSE). This covers the code in this package only.
 ## Data license
 
 EPA's `invitrodb` v4.3 (ToxCast bioactivity data) is [CC0](https://creativecommons.org/publicdomain/zero/1.0/) -- public domain, no attribution or share-alike terms to track. A courtesy citation is appreciated, not required: Filer, D.L. et al. (2017), *tcpl: the ToxCast pipeline for high-throughput screening data*, Bioinformatics, [doi:10.1093/bioinformatics/btw680](https://doi.org/10.1093/bioinformatics/btw680).
+
+`structures()` is sourced from PubChem, not EPA -- PubChem is a US government (NCBI/NLM) resource, and information on NLM's own web properties is public domain and freely redistributable ([NCBI website and data usage policies](https://www.ncbi.nlm.nih.gov/home/about/policies/)), the same status the rest of this package's EPA data has.

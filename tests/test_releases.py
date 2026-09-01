@@ -11,8 +11,13 @@ def test_v4_3_release_capabilities():
     v4_3 = infos["v4_3"]
     assert v4_3.bioactivity is True
     assert v4_3.pubchem_bridge is True
-    # Structures aren't mirrored yet -- this is expected, not a bug.
-    assert v4_3.structures is False
+    assert v4_3.structures is True
+    # PubChem-sourced, not EPA's own DSSTox bulk distribution -- see
+    # structures.py's module docstring for why. Real, measured coverage
+    # (94.3%), not a guess.
+    assert v4_3.structures_source == "pubchem"
+    assert v4_3.structures_coverage is not None
+    assert 0.9 < v4_3.structures_coverage < 1.0
 
 
 def test_unknown_release_raises():

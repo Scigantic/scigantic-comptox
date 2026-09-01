@@ -1,12 +1,19 @@
-"""Cross-reference ToxCast bioactivity to PubChem, through EPA's own
-precomputed bridge file rather than re-deriving the join yourself.
+"""EPA's own per-assay-endpoint PubChem BioAssay submission data, wrapped
+as a single table rather than 1,536 separate files.
 
-EPA publishes a per-assay-endpoint PubChem CID cross-reference alongside
-each invitrodb release (`pubchem_invitrodb_v4_3_*.zip`, 1,536 files, one per
-assay endpoint). This module wraps the consolidated single-table version of
-that file. Combined with scigantic-pubchem's own bioassay/gene/protein
-coverage, this is a real bridge into the rest of the scigantic-* family, the
-same shape as scigantic-bindingdb's chembl_bridge().
+CORRECTION (as of the structures/v0.3.0 release): despite this table's
+original name, it does NOT contain a PubChem CID. `tx_sample_id` is EPA's
+own ToxCast sample identifier, used when EPA submits this bioactivity data
+TO PubChem's BioAssay system (`pubchem_invitrodb_v4_3_*.zip`, 1,536 files,
+one per assay endpoint) -- it is not something a caller can resolve back
+into a CID. There is no `cid` column in this table, and never was; earlier
+docs (including this module's own, before this correction) described it as
+a "PubChem CID cross-reference," which was wrong.
+
+For an actual chemical-to-PubChem-CID cross-reference, use `structures()`
+(structures.py) instead -- built separately by resolving each chemical's
+DTXSID against PubChem's own live compound search, not sourced from this
+table.
 """
 
 from __future__ import annotations

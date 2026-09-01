@@ -181,6 +181,11 @@ def _get_base_connection(release: str) -> "duckdb.DuckDBPyConnection":
                     f"CREATE OR REPLACE VIEW {view_name} AS "
                     f"SELECT * FROM read_parquet('{path}')"
                 )
+            structures_path = f"{base}/derived/structures.parquet"
+            new_con.execute(
+                f"CREATE OR REPLACE VIEW structures AS "
+                f"SELECT * FROM read_parquet('{structures_path}')"
+            )
             _base_cons[release] = new_con
             con = new_con
     return con
