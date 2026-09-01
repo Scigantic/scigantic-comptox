@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.2.0
+
+Real feedback from a separate ML pipeline evaluating CompTox as a
+transfer-learning signal surfaced three gaps that traced to one root
+cause: the mirror shipped EPA's fact table (bioactivity results) but none
+of the small reference data EPA publishes alongside it. Rather than patch
+in fields one at a time, this mirrors the whole small bundle at once.
+
+- `assay_annotations()`: per-assay-endpoint design and target metadata
+  (1,647 rows), including `intended_target_family` -- lets you filter to
+  a target family (e.g. cytochrome P450) instead of string-matching on
+  assay names.
+- `assay_target_mappings()`: assay-to-gene mapping in long form (2,187
+  rows), with real Entrez gene ids and official gene symbols. Distinct
+  from `assay_annotations()`, whose target columns are broad categories,
+  not gene-level identifiers.
+- `cytotox()`: per-chemical cytotoxicity burst summary (10,487 rows) --
+  lets a caller check whether a hit call sits near a chemical's cytotoxic
+  concentration, a well-known ToxCast confound.
+- `analytical_qc()`: per-chemical/per-sample QC pass/caution flags plus a
+  few OPERA-predicted physicochemical properties (42,891 rows).
+- `p_ac50`/`p_bmd`: computed log-potency columns on `bioactivity()`, the
+  same shape as scigantic-chembl's `pchembl_value` / scigantic-bindingdb's
+  `p_affinity`. Computed only where `conc_unit` is verified `'uM'`
+  (98.8% of rows) -- a genuine 0.09% of rows carry `'mg/l'` instead (a
+  mass-based unit needing a molecular weight this table doesn't have to
+  convert correctly), and applying the uM-based transform there would
+  silently produce a wrong potency value, not just a missing one.
+
+All four reference tables together add under 3MB to the mirror.
+
 ## 0.1.1
 
 Real perf and usability fix, found by stress-testing 0.1.0 against a

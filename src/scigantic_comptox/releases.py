@@ -2,11 +2,15 @@
 
 Reads a small manifest at s3://scigantic-comptox/_MANIFEST.json, the same
 mechanism scigantic-chembl and scigantic-bindingdb use. The v4_3 release
-carries `bioactivity` and `pubchem_bridge`; `structures` is False because
-DSSTox bulk chemical structures aren't mirrored yet (EPA's bulk distribution
-for that turned out to be a messy institutional drive, not a clean single
-file) -- a future release can add a structures.parquet without breaking
-anything that calls releases() to check what's available first.
+carries `bioactivity`, `pubchem_bridge`, and four small reference tables
+(`assay_annotations`, `assay_target_mappings`, `cytotox`, `analytical_qc`)
+mirrored alongside EPA's fact table rather than just the fact table alone
+-- see reference.py's module docstring for why. `structures` is False
+because DSSTox bulk chemical structures aren't mirrored yet (EPA's bulk
+distribution for that turned out to be a messy institutional drive, not a
+clean single file) -- a future release can add a structures.parquet
+without breaking anything that calls releases() to check what's available
+first.
 
 The manifest is fetched once per process and cached. If it can't be fetched,
 calls fall back to the snapshot below rather than failing outright.
@@ -29,7 +33,15 @@ _TIMEOUT_SECONDS = 5
 # Last-known-good snapshot, shipped with this package version.
 _FALLBACK_LATEST = "v4_3"
 _FALLBACK_RELEASES = {
-    "v4_3": {"structures": False, "bioactivity": True, "pubchem_bridge": True},
+    "v4_3": {
+        "structures": False,
+        "bioactivity": True,
+        "pubchem_bridge": True,
+        "assay_annotations": True,
+        "assay_target_mappings": True,
+        "cytotox": True,
+        "analytical_qc": True,
+    },
 }
 
 
@@ -47,6 +59,10 @@ class ReleaseInfo:
     structures: bool
     bioactivity: bool
     pubchem_bridge: bool
+    assay_annotations: bool
+    assay_target_mappings: bool
+    cytotox: bool
+    analytical_qc: bool
 
 
 _cache: dict[str, Any] | None = None

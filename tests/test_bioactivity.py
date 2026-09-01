@@ -119,3 +119,41 @@ def test_bioactivity_record_count_matches_known_real_total():
 
     df = query("SELECT COUNT(*) AS n FROM bioactivity")
     assert df["n"].iloc[0] > 3_000_000
+
+
+def test_p_ac50_only_computed_for_verified_um_rows():
+    """p_ac50/p_bmd must be NULL for anything not verified as conc_unit
+    'uM' -- applying the uM-based transform to an mg/l row would silently
+    produce a wrong potency value for a real chemical, not just a missing
+    one. conc_unit is real on the mirror: 98.8% 'uM', but a genuine 0.09%
+    ('mg/l') and ~1% ('NA'/'CF') aren't."""
+    df = query(
+        "SELECT conc_unit, ac50, p_ac50 FROM bioactivity "
+        "WHERE conc_unit != 'uM' AND ac50 IS NOT NULL LIMIT 50"
+    )
+    assert len(df) > 0
+    assert df["p_ac50"].isna().all()
+
+
+def test_p_ac50_matches_hand_computed_transform_for_um_rows():
+    df = query(
+        "SELECT ac50, p_ac50 FROM bioactivity "
+        "WHERE conc_unit = 'uM' AND ac50 IS NOT NULL AND ac50 > 0 LIMIT 20"
+    )
+    assert len(df) > 0
+    import numpy as np
+
+    expected = 6 - np.log10(df["ac50"])
+    assert np.allclose(df["p_ac50"], expected)
+
+
+def test_p_bmd_matches_hand_computed_transform_for_um_rows():
+    df = query(
+        "SELECT bmd, p_bmd FROM bioactivity "
+        "WHERE conc_unit = 'uM' AND bmd IS NOT NULL AND bmd > 0 LIMIT 20"
+    )
+    assert len(df) > 0
+    import numpy as np
+
+    expected = 6 - np.log10(df["bmd"])
+    assert np.allclose(df["p_bmd"], expected)

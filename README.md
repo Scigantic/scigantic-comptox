@@ -40,6 +40,8 @@ comptox.bioactivity(aeid=1114, limit=5)
 
 EPA's export uses the literal string `"NA"` for missing values in several columns (including `dsstox_substance_id`), not a real SQL `NULL` -- filtering with `IS NOT NULL` silently misses these. `bioactivity()` normalizes this (`NULLIF(..., 'NA')`) so a real `NULL` check works as expected; it also casts columns EPA ships as text purely because of those `"NA"` strings (`ac50`, `bmd`, `top`, and others) to real `DOUBLE`s. Use `bioactivity_raw()` if you want EPA's exact upstream types instead.
 
+`p_ac50`/`p_bmd` are computed log-potency columns, the same shape as [scigantic-chembl](https://github.com/Scigantic/scigantic-chembl)'s `pchembl_value` and [scigantic-bindingdb](https://github.com/Scigantic/scigantic-bindingdb)'s `p_affinity`: `6 - log10(value_in_uM)`, higher meaning more potent. Computed only where `conc_unit` is verified `'uM'` (98.8% of rows) -- a real 0.09% carry `'mg/l'` instead, a mass-based unit this table can't convert correctly without a molecular weight, so those stay `NULL` rather than getting a silently wrong value.
+
 ### Batch lookups
 
 The mirror isn't sorted or partitioned by chemical id, so `bioactivity(dtxsid=...)` pays close to a full scan of the table on every call. Fine for one lookup, slow for a batch -- use `bioactivity_many()` instead:
@@ -60,6 +62,17 @@ comptox.pubchem_bridge_many(["DTXSID7020182", "DTXSID2021868"])  # same batching
 ```
 
 Pairs naturally with [scigantic-pubchem](https://github.com/Scigantic/scigantic-pubchem)'s own BioAssay/gene/protein coverage.
+
+## Reference tables
+
+EPA publishes four small reference files alongside the bioactivity fact table -- target/design metadata, gene mapping, cytotoxicity context, and QC flags. All four are mirrored here too, under 3MB combined:
+
+```python
+comptox.assay_annotations(intended_target_family="cyp")   # filter assays by target family, not by string-matching assay names
+comptox.assay_target_mappings(official_symbol="CYP2D6")   # real Entrez gene ids and gene symbols per assay
+comptox.cytotox(dtxsid="DTXSID7020182")                    # is this chemical's hit call near its cytotoxic concentration?
+comptox.analytical_qc(dtxsid="DTXSID7020182")               # sample QC pass/caution, plus molecular weight/logKow/vapor pressure
+```
 
 ## Writing your own SQL
 
@@ -112,9 +125,9 @@ The live REST half has its own separate cache, ON by default (`comptox.disable_c
 comptox.releases()
 ```
 
-| release | bioactivity | pubchem bridge | structures |
-|---|---|---|---|
-| v4_3 | yes | yes | no |
+| release | bioactivity | pubchem bridge | reference tables | structures |
+|---|---|---|---|---|
+| v4_3 | yes | yes | yes | no |
 
 This table isn't hardcoded. `releases()` reads a small manifest published alongside each mirror run.
 
