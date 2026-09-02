@@ -11,7 +11,7 @@
         <img alt="License" src="https://img.shields.io/github/license/Scigantic/scigantic-comptox" /></a>
 </p>
 
-Query EPA's [CompTox Chemicals Dashboard](https://comptox.epa.gov/dashboard/) from Python. Two halves, and only one of them needs anything from you:
+Query EPA's [CompTox Chemicals Dashboard](https://comptox.epa.gov/dashboard/) from Python. The package has two parts:
 
 - **ToxCast bioactivity**, from a public S3 mirror over DuckDB. No API key, no download, no local database.
 - **Live Chemical/Hazard/Exposure lookups**, over EPA's own CCTE REST API. Optional, and requires your own EPA API key.
@@ -84,7 +84,7 @@ comptox.query("SELECT dtxsid, aeid, hitc FROM bioactivity WHERE dtxsid = 'DTXSID
 
 ## Chemical structures
 
-Real structure data for every chemical this mirror covers -- SMILES, InChI, InChIKey, formula, molecular weight -- sourced from PubChem, not EPA's own DSSTox bulk distribution:
+SMILES, InChI, InChIKey, formula, and molecular weight for the chemicals in this mirror, sourced from PubChem rather than EPA's own DSSTox bulk distribution:
 
 ```python
 comptox.structures(dtxsid="DTXSID7020182")
@@ -93,7 +93,7 @@ comptox.structures_many(["DTXSID7020182", "DTXSID2021868"])
 
 DSSTox's bulk distribution turned out to be a large, unstructured institutional drive with no clean single file to mirror -- a real dead end, not skipped for convenience. EPA's live Chemical API could resolve structures too, but has an unresolved data-use question for bulk redistribution (no public Terms of Service or Data Use Agreement could be found for the API itself), not something worth guessing at instead of asking EPA directly. PubChem sidesteps both problems: fully open, no key, and every DTXSID here was resolved live against PubChem's own compound search, which indexes DTXSID as a synonym.
 
-Real coverage, not assumed: **9,238 of 9,801 distinct chemicals resolved (94.3%)**. The rest genuinely have no PubChem match under that identifier. `comptox.releases()` reports `structures_source="pubchem"` and the real `structures_coverage` fraction, so this doesn't get mistaken for EPA's own canonical DSSTox data.
+**9,238 of 9,801 distinct chemicals resolved (94.3%)**. The rest have no PubChem match under that identifier. `comptox.releases()` reports `structures_source="pubchem"` and the `structures_coverage` fraction, so this isn't mistaken for EPA's own canonical DSSTox data.
 
 ## The live REST half: bring your own EPA API key
 
