@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scigantic-comptox"
-version = "0.3.0"
+version = "0.3.1"
 description = "Query EPA's CompTox Chemicals Dashboard: ToxCast bioactivity (winning dose-response model + hit-call per chemical/assay-endpoint) from a public S3 mirror, plus live Chemical/Hazard/Exposure lookups via EPA's CCTE API."
 readme = "README.md"
 requires-python = ">=3.10"
