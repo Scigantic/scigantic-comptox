@@ -40,6 +40,7 @@ Homepage = "https://scigantic.com"
 Repository = "https://github.com/Scigantic/scigantic-comptox"
 Issues = "https://github.com/Scigantic/scigantic-comptox/issues"
 CompTox = "https://comptox.epa.gov/dashboard/"
+Documentation = "https://github.com/Scigantic/scigantic-comptox#readme"
 
 [project.scripts]
 scigantic-comptox = "scigantic_comptox.cli:main"
