@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: scigantic-comptox
+abstract: "Query EPA's CompTox Chemicals Dashboard: ToxCast bioactivity from a public S3 mirror, plus live Chemical, Hazard and Exposure lookups via EPA's CCTE API."
+authors:
+  - name: Scigantic
+    website: https://scigantic.com
+repository-code: https://github.com/Scigantic/scigantic-comptox
+url: https://pypi.org/project/scigantic-comptox/
+license: MIT-0
+keywords:
+  - "epa"
+  - "comptox"
+  - "toxcast"
+  - "toxicology"
+  - "cheminformatics"
+  - "bioinformatics"
+  - "duckdb"
+version: "0.3.1"
+date-released: '2026-10-05'
